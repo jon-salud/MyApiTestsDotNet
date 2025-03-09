@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using NUnit.Framework;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using TechTalk.SpecFlow;
@@ -38,6 +39,15 @@ public class ApiSteps
         Assert.IsNotEmpty(_privateKey, "Private key should not be empty");
     }
 
+    [Given(@"I have invalid Marvel API credentials")]
+    public void GivenIHaveInvalidMarvelApiCredentials()
+    {
+        // Use a fake private key to generate an invalid hash
+        _privateKey = "invalid-private-key";
+        Assert.IsNotEmpty(_publicKey, "Public key should not be empty");
+        Assert.IsNotEmpty(_privateKey, "Private key should not be empty");
+    }
+
     [When(@"I send a GET request to ""(.*)"" endpoint")]
     public async Task WhenISendAGetRequestToEndpoint(string endpoint)
     {
@@ -57,9 +67,10 @@ public class ApiSteps
         // Console.WriteLine($"Request URL: {fullUrl}");
 
         _response = await _requestContext.GetAsync(endpoint, new APIRequestContextOptions
-        {
-            Params = queryParams
-        });
+            {
+                Params = queryParams
+            }
+        );
     }
 
     [Then(@"I receive a 200 status code")]
@@ -67,6 +78,13 @@ public class ApiSteps
     {
         Assert.IsNotNull(_response, "Response should not be null");
         Assert.That(_response.Status, Is.EqualTo(200), $"Expected status code 200, but got {_response.Status}");
+    }
+
+    [Then(@"I receive a 401 status code")]
+    public void ThenIReceiveA401StatusCode()
+    {
+        Assert.IsNotNull(_response, "Response should not be null");
+        Assert.That(_response.Status, Is.EqualTo(401), $"Expected status code 401, but got {_response.Status}");
     }
 
     [Then(@"the response contains comic book data")]
@@ -77,6 +95,23 @@ public class ApiSteps
         Assert.IsNotEmpty(responseText, "Response should not be empty");
         Assert.IsTrue(responseText.Contains("comics"), "Response should contain comic book data");
         // Console.WriteLine($"Response: {responseText}");
+
+        var json = await _response.JsonAsync();
+        var comics = json?.GetProperty("data").GetProperty("results");
+        Assert.IsTrue(comics?.EnumerateArray().Any() == true, "Should return at least one comic");
+        Console.WriteLine($"First comic title: {comics?.EnumerateArray().First().GetProperty("title").GetString()}");
+    }
+
+
+    [Then(@"the first comic book has a title of ""(.*)""")]
+    public async Task ThenTheFirstComicBookTitle(string title)
+    {
+        Assert.IsNotNull(_response, "Response should not be null");
+        var json = await _response.JsonAsync();
+        var comics = json?.GetProperty("data").GetProperty("results");
+        Assert.IsTrue(comics?.EnumerateArray().Any() == true, "Should return at least one comic");
+        string? actualTitle = comics?.EnumerateArray().First().GetProperty("title").GetString();
+        Assert.That(actualTitle, Is.EqualTo(title), $"Expected title: {title}, Actual title: {actualTitle}");
     }
 
     [AfterScenario]

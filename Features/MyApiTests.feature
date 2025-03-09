@@ -8,3 +8,9 @@ Feature: API Authentication and Data Retrieval
     When I send a GET request to "comics" endpoint
     Then I receive a 200 status code
     And the response contains comic book data
+    And the first comic book has a title of "Marvel Previews (2017)"
+
+  Scenario: Fail to retrieve comics with invalid API key
+    Given I have invalid Marvel API credentials
+    When I send a GET request to "comics" endpoint
+    Then I receive a 401 status code
