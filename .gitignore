@@ -1,0 +1,30 @@
+# .NET Build Outputs
+bin/
+obj/
+*.csproj.user
+
+# Playwright Browser Binaries (if downloaded locally)
+.playwright/
+*.zip
+
+# Sensitive Configuration Files
+appsettings.json
+
+# Test Results
+TestResults/
+*.trx
+
+# VS Code Settings
+.vscode/
+
+# NuGet Packages (optional, if not using packages.lock.json)
+*.nupkg
+packages/
+
+# Logs or Temporary Files
+*.log
+*.tmp
+
+# User-specific files
+*.suo
+*.user
